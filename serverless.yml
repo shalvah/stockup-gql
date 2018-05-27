@@ -1,0 +1,45 @@
+service: stockup-gql
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  iamRoleStatements:
+          - Effect: Allow
+            Action:
+              - dynamodb:DescribeTable
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource:
+               Fn::Join:
+                 - ""
+                 - - "arn:aws:dynamodb:*:*:table/"
+                   - Ref: ProductsDynamoDbTable
+
+functions:
+  queryProducts:
+    handler: handler.queryProducts
+    events:
+    - http:
+        path: products
+        method: post
+        cors: true
+
+resources:
+  Resources:
+    ProductsDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: products
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
